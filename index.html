@@ -85,6 +85,29 @@
     padding: 28px 20px 64px;
   }
 
+  .page-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+  .page-tab {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--ink-soft);
+    font-family: var(--sans);
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .page-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+
   header.top {
     display: flex;
     align-items: baseline;
@@ -370,19 +393,124 @@
     .sentence-en { font-size: 1.14rem; }
     .start h2 { font-size: 1.35rem; }
   }
+
+  /* ---- page 2: 빈칸 채우기 ---- */
+  .blank-box {
+    display: inline-block;
+    min-width: 64px;
+    height: 1.05em;
+    border-bottom: 2px solid var(--accent);
+    margin: 0 3px;
+    vertical-align: middle;
+  }
+  .fill-sentence {
+    line-height: 1.7;
+    margin: 0 0 8px;
+  }
+  .fill-sentence.en {
+    font-family: var(--serif);
+    font-size: 1.12rem;
+  }
+  .fill-sentence.ko {
+    font-size: 1.0rem;
+    color: var(--ink-soft);
+  }
+  .fill-block {
+    margin: 18px 0 22px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--line);
+  }
+  .fill-block:first-of-type { border-top: none; padding-top: 0; }
+  .fill-block .fill-label {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+  }
+  .option-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  @media (max-width: 460px) {
+    .option-grid { grid-template-columns: 1fr; }
+  }
+  .opt-btn {
+    text-align: left;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    cursor: pointer;
+    line-height: 1.4;
+  }
+  .opt-btn .w { font-weight: 700; }
+  .opt-btn .g { color: var(--ink-soft); font-size: 0.8rem; display: block; }
+  .opt-btn.picked {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .opt-btn.correct {
+    border-color: var(--good);
+    background: var(--good-soft);
+    color: var(--good);
+  }
+  .opt-btn.wrong {
+    border-color: var(--warn);
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .opt-btn:disabled { cursor: default; }
+
+  .fill-result-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+  }
+  .fill-tag {
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+  }
+  .fill-tag.ok { background: var(--good-soft); color: var(--good); }
+  .fill-tag.no { background: var(--warn-soft); color: var(--warn); }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="top">
-    <h1>📖 독해 테스트</h1>
-    <div class="sub" id="topSub"></div>
-  </header>
-  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="page-tabs">
+    <button class="page-tab active" id="tabPage1">1쪽 · 문장 해석 테스트</button>
+    <button class="page-tab" id="tabPage2">2쪽 · 빈칸 채우기 테스트</button>
+  </div>
 
-  <div id="app"></div>
+  <div id="page1Root">
+    <header class="top">
+      <h1>📖 독해 테스트</h1>
+      <div class="sub" id="topSub"></div>
+    </header>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
-  <footer class="hint" id="globalHint"></footer>
+    <div id="app"></div>
+
+    <footer class="hint" id="globalHint"></footer>
+  </div>
+
+  <div id="page2Root" style="display:none;">
+    <header class="top">
+      <h1>🧩 빈칸 채우기</h1>
+      <div class="sub" id="topSub2"></div>
+    </header>
+    <div class="progress-track"><div class="progress-fill" id="progressFill2"></div></div>
+
+    <div id="app2"></div>
+
+    <footer class="hint" id="globalHint2"></footer>
+  </div>
 </div>
 
 <script>
@@ -646,6 +774,7 @@ function updateProgress() {
 }
 
 function renderStart() {
+  startNum = loadSavedResume();
   topSub.textContent = "";
   progressFill.style.width = "0%";
   globalHint.textContent = "";
@@ -848,6 +977,344 @@ function escapeHtml(str) {
 }
 
 renderStart();
+
+// =================================================================
+// 2쪽: 빈칸 채우기 (영어 문장 빈칸 + 한글 해석 빈칸, 4지선다)
+// =================================================================
+const BLANKS = [{"enWord": "climate", "koWord": "분위기", "enOptions": [{"word": "climate", "gloss": "분위기, 환경"}, {"word": "anger", "gloss": "분노, 화"}, {"word": "perspective", "gloss": "관점, 시각"}, {"word": "difficulties", "gloss": "어려움, 곤란"}], "koOptions": ["분위기", "분노", "관점", "어려움"]}, {"enWord": "successes", "koWord": "성과", "enOptions": [{"word": "successes", "gloss": "성과, 성공"}, {"word": "Affection", "gloss": "애정"}, {"word": "compliance", "gloss": "순응, 준수"}, {"word": "resources", "gloss": "자원"}], "koOptions": ["성과", "애정", "순응", "자원"]}, {"enWord": "term", "koWord": "용어", "enOptions": [{"word": "term", "gloss": "용어, 명칭"}, {"word": "indicators", "gloss": "지표, 지표가 되는 것"}, {"word": "fluency", "gloss": "유창성, 능숙함"}, {"word": "difficulties", "gloss": "어려움, 곤란"}], "koOptions": ["용어", "지표", "유창성", "어려움"]}, {"enWord": "capacity", "koWord": "역량", "enOptions": [{"word": "capacity", "gloss": "역량, 능력"}, {"word": "shift", "gloss": "전환, 변화"}, {"word": "perspective", "gloss": "관점, 시각"}, {"word": "assumptions", "gloss": "가정, 전제"}], "koOptions": ["역량", "전환", "관점", "가정들"]}, {"enWord": "recreation", "koWord": "여가", "enOptions": [{"word": "recreation", "gloss": "여가, 오락"}, {"word": "characteristic", "gloss": "특징, 특성"}, {"word": "shift", "gloss": "전환, 변화"}, {"word": "frequency", "gloss": "빈도"}], "koOptions": ["여가", "특징", "전환", "빈도"]}, {"enWord": "emphasized", "koWord": "강조된다", "enOptions": [{"word": "emphasized", "gloss": "강조되다"}, {"word": "monitoring", "gloss": "관찰하다, 감시하다"}, {"word": "distinguished", "gloss": "구별되다, 구분되다"}, {"word": "categorized", "gloss": "분류되다"}], "koOptions": ["강조된다", "관찰", "구분되는", "분류될"]}, {"enWord": "shift", "koWord": "전환", "enOptions": [{"word": "shift", "gloss": "전환, 변화"}, {"word": "backgrounds", "gloss": "배경"}, {"word": "areas", "gloss": "영역"}, {"word": "assumptions", "gloss": "가정, 전제"}], "koOptions": ["전환", "배경", "영역", "가정들"]}, {"enWord": "perspective", "koWord": "관점", "enOptions": [{"word": "perspective", "gloss": "관점, 시각"}, {"word": "frequency", "gloss": "빈도"}, {"word": "capacity", "gloss": "역량, 능력"}, {"word": "resources", "gloss": "자원"}], "koOptions": ["관점", "빈도", "역량", "자원"]}, {"enWord": "disabilities", "koWord": "장애", "enOptions": [{"word": "disabilities", "gloss": "장애"}, {"word": "Affection", "gloss": "애정"}, {"word": "repertoire", "gloss": "레퍼토리, 목록"}, {"word": "term", "gloss": "용어, 명칭"}], "koOptions": ["장애", "애정", "레퍼토리", "용어"]}, {"enWord": "demanding", "koWord": "힘든", "enOptions": [{"word": "demanding", "gloss": "힘든, 부담스러운"}, {"word": "internal", "gloss": "내적인, 내부의"}, {"word": "additional", "gloss": "추가의, 추가적인"}, {"word": "approximately", "gloss": "대략, 약"}], "koOptions": ["힘든", "내적", "추가", "약"]}, {"enWord": "backgrounds", "koWord": "배경", "enOptions": [{"word": "backgrounds", "gloss": "배경"}, {"word": "successes", "gloss": "성과, 성공"}, {"word": "guidance", "gloss": "지도, 안내"}, {"word": "duration", "gloss": "지속시간, 기간"}], "koOptions": ["배경", "성과", "지도", "지속시간"]}, {"enWord": "challenge", "koWord": "과제", "enOptions": [{"word": "challenge", "gloss": "과제, 도전"}, {"word": "profanity", "gloss": "욕설, 비속어"}, {"word": "attention", "gloss": "관심, 주의"}, {"word": "term", "gloss": "용어, 명칭"}], "koOptions": ["과제", "욕설", "관심", "용어"]}, {"enWord": "assumptions", "koWord": "가정들", "enOptions": [{"word": "assumptions", "gloss": "가정, 전제"}, {"word": "perspective", "gloss": "관점, 시각"}, {"word": "resources", "gloss": "자원"}, {"word": "profanity", "gloss": "욕설, 비속어"}], "koOptions": ["가정들", "관점", "자원", "욕설"]}, {"enWord": "inappropriate", "koWord": "부적절한", "enOptions": [{"word": "inappropriate", "gloss": "부적절한"}, {"word": "intrusive", "gloss": "침해적인, 방해가 되는"}, {"word": "comprehensive", "gloss": "포괄적인, 종합적인"}, {"word": "demanding", "gloss": "힘든, 부담스러운"}], "koOptions": ["부적절한", "침해적", "포괄적이고", "힘든"]}, {"enWord": "structure", "koWord": "구조화", "enOptions": [{"word": "structure", "gloss": "구조, 체계"}, {"word": "disabilities", "gloss": "장애"}, {"word": "aggression", "gloss": "공격성"}, {"word": "compliance", "gloss": "순응, 준수"}], "koOptions": ["구조화", "장애", "공격성", "순응"]}, {"enWord": "desirable", "koWord": "바람직한", "enOptions": [{"word": "desirable", "gloss": "바람직한"}, {"word": "punitive", "gloss": "처벌적인"}, {"word": "prosocial", "gloss": "친사회적인"}, {"word": "catastrophic", "gloss": "재난적인, 대재앙의"}], "koOptions": ["바람직한", "처벌적", "친사회적", "재난적"]}, {"enWord": "difficulties", "koWord": "어려움", "enOptions": [{"word": "difficulties", "gloss": "어려움, 곤란"}, {"word": "self-management", "gloss": "자기관리"}, {"word": "resources", "gloss": "자원"}, {"word": "areas", "gloss": "영역"}], "koOptions": ["어려움", "자기관리", "자원", "영역"]}, {"enWord": "predictably", "koWord": "예측 가능하게", "enOptions": [{"word": "predictably", "gloss": "예측 가능하게"}, {"word": "proactive", "gloss": "사전예방적인, 선제적인"}, {"word": "desirable", "gloss": "바람직한"}, {"word": "additional", "gloss": "추가의, 추가적인"}], "koOptions": ["예측 가능하게", "사전예방적", "바람직한", "추가"]}, {"enWord": "punitive", "koWord": "처벌적", "enOptions": [{"word": "punitive", "gloss": "처벌적인"}, {"word": "substantial", "gloss": "상당한, 많은"}, {"word": "conversely", "gloss": "반대로, 역으로"}, {"word": "intensive", "gloss": "집중적인"}], "koOptions": ["처벌적", "상당한", "반대로", "집중적인"]}, {"enWord": "proactive", "koWord": "사전예방적", "enOptions": [{"word": "proactive", "gloss": "사전예방적인, 선제적인"}, {"word": "predictably", "gloss": "예측 가능하게"}, {"word": "special", "gloss": "특수한, 전문의"}, {"word": "excessive", "gloss": "지나친, 과도한"}], "koOptions": ["사전예방적", "예측 가능하게", "특수", "지나친"]}, {"enWord": "special", "koWord": "특수", "enOptions": [{"word": "special", "gloss": "특수한, 전문의"}, {"word": "additional", "gloss": "추가의, 추가적인"}, {"word": "internal", "gloss": "내적인, 내부의"}, {"word": "proactive", "gloss": "사전예방적인, 선제적인"}], "koOptions": ["특수", "추가", "내적", "사전예방적"]}, {"enWord": "collaboratively", "koWord": "협력적으로", "enOptions": [{"word": "collaboratively", "gloss": "협력적으로"}, {"word": "intense", "gloss": "강렬한, 극심한"}, {"word": "predictably", "gloss": "예측 가능하게"}, {"word": "proactive", "gloss": "사전예방적인, 선제적인"}], "koOptions": ["협력적으로", "강렬하고", "예측 가능하게", "사전예방적"]}, {"enWord": "characteristic", "koWord": "특징", "enOptions": [{"word": "characteristic", "gloss": "특징, 특성"}, {"word": "shift", "gloss": "전환, 변화"}, {"word": "climate", "gloss": "분위기, 환경"}, {"word": "successes", "gloss": "성과, 성공"}], "koOptions": ["특징", "전환", "분위기", "성과"]}, {"enWord": "distinguished", "koWord": "구분되는", "enOptions": [{"word": "distinguished", "gloss": "구별되다, 구분되다"}, {"word": "emphasized", "gloss": "강조되다"}, {"word": "monitoring", "gloss": "관찰하다, 감시하다"}, {"word": "remediate", "gloss": "개선하다, 바로잡다"}], "koOptions": ["구분되는", "강조된다", "관찰", "개선하기"]}, {"enWord": "intensive", "koWord": "집중적인", "enOptions": [{"word": "intensive", "gloss": "집중적인"}, {"word": "demanding", "gloss": "힘든, 부담스러운"}, {"word": "collaboratively", "gloss": "협력적으로"}, {"word": "additional", "gloss": "추가의, 추가적인"}], "koOptions": ["집중적인", "힘든", "협력적으로", "추가"]}, {"enWord": "resources", "koWord": "자원", "enOptions": [{"word": "resources", "gloss": "자원"}, {"word": "backgrounds", "gloss": "배경"}, {"word": "guidance", "gloss": "지도, 안내"}, {"word": "challenge", "gloss": "과제, 도전"}], "koOptions": ["자원", "배경", "지도", "과제"]}, {"enWord": "ensure", "koWord": "보장하고", "enOptions": [{"word": "ensure", "gloss": "보장하다, 확실히 하다"}, {"word": "monitoring", "gloss": "관찰하다, 감시하다"}, {"word": "distinguished", "gloss": "구별되다, 구분되다"}, {"word": "refusing", "gloss": "거부하다"}], "koOptions": ["보장하고", "관찰", "구분되는", "거부하는"]}, {"enWord": "settings", "koWord": "환경", "enOptions": [{"word": "settings", "gloss": "환경, 장면"}, {"word": "indicators", "gloss": "지표, 지표가 되는 것"}, {"word": "Affection", "gloss": "애정"}, {"word": "duration", "gloss": "지속시간, 기간"}], "koOptions": ["환경", "지표", "애정", "지속시간"]}, {"enWord": "chronic", "koWord": "만성적", "enOptions": [{"word": "chronic", "gloss": "만성적인"}, {"word": "inappropriate", "gloss": "부적절한"}, {"word": "catastrophic", "gloss": "재난적인, 대재앙의"}, {"word": "proactive", "gloss": "사전예방적인, 선제적인"}], "koOptions": ["만성적", "부적절한", "재난적", "사전예방적"]}, {"enWord": "remediate", "koWord": "개선하기", "enOptions": [{"word": "remediate", "gloss": "개선하다, 바로잡다"}, {"word": "refusing", "gloss": "거부하다"}, {"word": "perceive", "gloss": "인식하다, 지각하다"}, {"word": "monitoring", "gloss": "관찰하다, 감시하다"}], "koOptions": ["개선하기", "거부하는", "인식할", "관찰"]}, {"enWord": "approximately", "koWord": "약", "enOptions": [{"word": "approximately", "gloss": "대략, 약"}, {"word": "substantial", "gloss": "상당한, 많은"}, {"word": "chronic", "gloss": "만성적인"}, {"word": "inappropriate", "gloss": "부적절한"}], "koOptions": ["약", "상당한", "만성적", "부적절한"]}, {"enWord": "repertoire", "koWord": "레퍼토리", "enOptions": [{"word": "repertoire", "gloss": "레퍼토리, 목록"}, {"word": "disabilities", "gloss": "장애"}, {"word": "Affection", "gloss": "애정"}, {"word": "challenge", "gloss": "과제, 도전"}], "koOptions": ["레퍼토리", "장애", "애정", "과제"]}, {"enWord": "attention", "koWord": "관심", "enOptions": [{"word": "attention", "gloss": "관심, 주의"}, {"word": "resources", "gloss": "자원"}, {"word": "backgrounds", "gloss": "배경"}, {"word": "magnitude", "gloss": "크기, 규모"}], "koOptions": ["관심", "자원", "배경", "크기"]}, {"enWord": "prosocial", "koWord": "친사회적", "enOptions": [{"word": "prosocial", "gloss": "친사회적인"}, {"word": "comprehensive", "gloss": "포괄적인, 종합적인"}, {"word": "excessive", "gloss": "지나친, 과도한"}, {"word": "special", "gloss": "특수한, 전문의"}], "koOptions": ["친사회적", "포괄적이고", "지나친", "특수"]}, {"enWord": "additional", "koWord": "추가", "enOptions": [{"word": "additional", "gloss": "추가의, 추가적인"}, {"word": "desirable", "gloss": "바람직한"}, {"word": "chronic", "gloss": "만성적인"}, {"word": "special", "gloss": "특수한, 전문의"}], "koOptions": ["추가", "바람직한", "만성적", "특수"]}, {"enWord": "comprehensive", "koWord": "포괄적이고", "enOptions": [{"word": "comprehensive", "gloss": "포괄적인, 종합적인"}, {"word": "intense", "gloss": "강렬한, 극심한"}, {"word": "desirable", "gloss": "바람직한"}, {"word": "predictably", "gloss": "예측 가능하게"}], "koOptions": ["포괄적이고", "강렬하고", "바람직한", "예측 가능하게"]}, {"enWord": "consequence", "koWord": "결과", "enOptions": [{"word": "consequence", "gloss": "결과, 후속 결과"}, {"word": "characteristic", "gloss": "특징, 특성"}, {"word": "attention", "gloss": "관심, 주의"}, {"word": "shift", "gloss": "전환, 변화"}], "koOptions": ["결과", "특징", "관심", "전환"]}, {"enWord": "duration", "koWord": "지속시간", "enOptions": [{"word": "duration", "gloss": "지속시간, 기간"}, {"word": "Affection", "gloss": "애정"}, {"word": "goal", "gloss": "목적, 목표"}, {"word": "successes", "gloss": "성과, 성공"}], "koOptions": ["지속시간", "애정", "목적", "성과"]}, {"enWord": "monitoring", "koWord": "관찰", "enOptions": [{"word": "monitoring", "gloss": "관찰하다, 감시하다"}, {"word": "distinguished", "gloss": "구별되다, 구분되다"}, {"word": "emphasized", "gloss": "강조되다"}, {"word": "categorized", "gloss": "분류되다"}], "koOptions": ["관찰", "구분되는", "강조된다", "분류될"]}, {"enWord": "magnitude", "koWord": "크기", "enOptions": [{"word": "magnitude", "gloss": "크기, 규모"}, {"word": "self-management", "gloss": "자기관리"}, {"word": "areas", "gloss": "영역"}, {"word": "perspective", "gloss": "관점, 시각"}], "koOptions": ["크기", "자기관리", "영역", "관점"]}, {"enWord": "goal", "koWord": "목적", "enOptions": [{"word": "goal", "gloss": "목적, 목표"}, {"word": "attention", "gloss": "관심, 주의"}, {"word": "structure", "gloss": "구조, 체계"}, {"word": "characteristic", "gloss": "특징, 특성"}], "koOptions": ["목적", "관심", "구조화", "특징"]}, {"enWord": "intrusive", "koWord": "침해적", "enOptions": [{"word": "intrusive", "gloss": "침해적인, 방해가 되는"}, {"word": "intense", "gloss": "강렬한, 극심한"}, {"word": "automatic", "gloss": "자동적인, 자동화된"}, {"word": "proactive", "gloss": "사전예방적인, 선제적인"}], "koOptions": ["침해적", "강렬하고", "자동화되고", "사전예방적"]}, {"enWord": "frequency", "koWord": "빈도", "enOptions": [{"word": "frequency", "gloss": "빈도"}, {"word": "fluency", "gloss": "유창성, 능숙함"}, {"word": "backgrounds", "gloss": "배경"}, {"word": "duration", "gloss": "지속시간, 기간"}], "koOptions": ["빈도", "유창성", "배경", "지속시간"]}, {"enWord": "compliance", "koWord": "순응", "enOptions": [{"word": "compliance", "gloss": "순응, 준수"}, {"word": "guidance", "gloss": "지도, 안내"}, {"word": "fluency", "gloss": "유창성, 능숙함"}, {"word": "successes", "gloss": "성과, 성공"}], "koOptions": ["순응", "지도", "유창성", "성과"]}, {"enWord": "conversely", "koWord": "반대로", "enOptions": [{"word": "conversely", "gloss": "반대로, 역으로"}, {"word": "inappropriate", "gloss": "부적절한"}, {"word": "substantial", "gloss": "상당한, 많은"}, {"word": "approximately", "gloss": "대략, 약"}], "koOptions": ["반대로", "부적절한", "상당한", "약"]}, {"enWord": "self-management", "koWord": "자기관리", "enOptions": [{"word": "self-management", "gloss": "자기관리"}, {"word": "compliance", "gloss": "순응, 준수"}, {"word": "structure", "gloss": "구조, 체계"}, {"word": "guidance", "gloss": "지도, 안내"}], "koOptions": ["자기관리", "순응", "구조화", "지도"]}, {"enWord": "fluency", "koWord": "유창성", "enOptions": [{"word": "fluency", "gloss": "유창성, 능숙함"}, {"word": "restructuring", "gloss": "재구조화"}, {"word": "indicators", "gloss": "지표, 지표가 되는 것"}, {"word": "Affection", "gloss": "애정"}], "koOptions": ["유창성", "재구조화", "지표", "애정"]}, {"enWord": "internal", "koWord": "내적", "enOptions": [{"word": "internal", "gloss": "내적인, 내부의"}, {"word": "excessive", "gloss": "지나친, 과도한"}, {"word": "demanding", "gloss": "힘든, 부담스러운"}, {"word": "automatic", "gloss": "자동적인, 자동화된"}], "koOptions": ["내적", "지나친", "힘든", "자동화되고"]}, {"enWord": "inhibit", "koWord": "억제할", "enOptions": [{"word": "inhibit", "gloss": "억제하다"}, {"word": "categorized", "gloss": "분류되다"}, {"word": "distinguished", "gloss": "구별되다, 구분되다"}, {"word": "ensure", "gloss": "보장하다, 확실히 하다"}], "koOptions": ["억제할", "분류될", "구분되는", "보장하고"]}, {"enWord": "substantial", "koWord": "상당한", "enOptions": [{"word": "substantial", "gloss": "상당한, 많은"}, {"word": "special", "gloss": "특수한, 전문의"}, {"word": "inappropriate", "gloss": "부적절한"}, {"word": "demanding", "gloss": "힘든, 부담스러운"}], "koOptions": ["상당한", "특수", "부적절한", "힘든"]}, {"enWord": "areas", "koWord": "영역", "enOptions": [{"word": "areas", "gloss": "영역"}, {"word": "self-management", "gloss": "자기관리"}, {"word": "attention", "gloss": "관심, 주의"}, {"word": "shift", "gloss": "전환, 변화"}], "koOptions": ["영역", "자기관리", "관심", "전환"]}, {"enWord": "indicators", "koWord": "지표", "enOptions": [{"word": "indicators", "gloss": "지표, 지표가 되는 것"}, {"word": "assumptions", "gloss": "가정, 전제"}, {"word": "profanity", "gloss": "욕설, 비속어"}, {"word": "capacity", "gloss": "역량, 능력"}], "koOptions": ["지표", "가정들", "욕설", "역량"]}, {"enWord": "excessive", "koWord": "지나친", "enOptions": [{"word": "excessive", "gloss": "지나친, 과도한"}, {"word": "predictably", "gloss": "예측 가능하게"}, {"word": "catastrophic", "gloss": "재난적인, 대재앙의"}, {"word": "collaboratively", "gloss": "협력적으로"}], "koOptions": ["지나친", "예측 가능하게", "재난적", "협력적으로"]}, {"enWord": "catastrophic", "koWord": "재난적", "enOptions": [{"word": "catastrophic", "gloss": "재난적인, 대재앙의"}, {"word": "approximately", "gloss": "대략, 약"}, {"word": "intensive", "gloss": "집중적인"}, {"word": "automatic", "gloss": "자동적인, 자동화된"}], "koOptions": ["재난적", "약", "집중적인", "자동화되고"]}, {"enWord": "intense", "koWord": "강렬하고", "enOptions": [{"word": "intense", "gloss": "강렬한, 극심한"}, {"word": "intensive", "gloss": "집중적인"}, {"word": "punitive", "gloss": "처벌적인"}, {"word": "comprehensive", "gloss": "포괄적인, 종합적인"}], "koOptions": ["강렬하고", "집중적인", "처벌적", "포괄적이고"]}, {"enWord": "anger", "koWord": "분노", "enOptions": [{"word": "anger", "gloss": "분노, 화"}, {"word": "disabilities", "gloss": "장애"}, {"word": "consequence", "gloss": "결과, 후속 결과"}, {"word": "aggression", "gloss": "공격성"}], "koOptions": ["분노", "장애", "결과", "공격성"]}, {"enWord": "refusing", "koWord": "거부하는", "enOptions": [{"word": "refusing", "gloss": "거부하다"}, {"word": "remediate", "gloss": "개선하다, 바로잡다"}, {"word": "perceive", "gloss": "인식하다, 지각하다"}, {"word": "dominates", "gloss": "지배하다, 우세하다"}], "koOptions": ["거부하는", "개선하기", "인식할", "지배적이다"]}, {"enWord": "perceive", "koWord": "인식할", "enOptions": [{"word": "perceive", "gloss": "인식하다, 지각하다"}, {"word": "refusing", "gloss": "거부하다"}, {"word": "distinguished", "gloss": "구별되다, 구분되다"}, {"word": "inhibit", "gloss": "억제하다"}], "koOptions": ["인식할", "거부하는", "구분되는", "억제할"]}, {"enWord": "profanity", "koWord": "욕설", "enOptions": [{"word": "profanity", "gloss": "욕설, 비속어"}, {"word": "anger", "gloss": "분노, 화"}, {"word": "consequence", "gloss": "결과, 후속 결과"}, {"word": "climate", "gloss": "분위기, 환경"}], "koOptions": ["욕설", "분노", "결과", "분위기"]}, {"enWord": "aggression", "koWord": "공격성", "enOptions": [{"word": "aggression", "gloss": "공격성"}, {"word": "indicators", "gloss": "지표, 지표가 되는 것"}, {"word": "attention", "gloss": "관심, 주의"}, {"word": "frequency", "gloss": "빈도"}], "koOptions": ["공격성", "지표", "관심", "빈도"]}, {"enWord": "Affection", "koWord": "애정", "enOptions": [{"word": "Affection", "gloss": "애정"}, {"word": "recreation", "gloss": "여가, 오락"}, {"word": "perspective", "gloss": "관점, 시각"}, {"word": "areas", "gloss": "영역"}], "koOptions": ["애정", "여가", "관점", "영역"]}, {"enWord": "guidance", "koWord": "지도", "enOptions": [{"word": "guidance", "gloss": "지도, 안내"}, {"word": "magnitude", "gloss": "크기, 규모"}, {"word": "repertoire", "gloss": "레퍼토리, 목록"}, {"word": "disabilities", "gloss": "장애"}], "koOptions": ["지도", "크기", "레퍼토리", "장애"]}, {"enWord": "dominates", "koWord": "지배적이다", "enOptions": [{"word": "dominates", "gloss": "지배하다, 우세하다"}, {"word": "monitoring", "gloss": "관찰하다, 감시하다"}, {"word": "refusing", "gloss": "거부하다"}, {"word": "remediate", "gloss": "개선하다, 바로잡다"}], "koOptions": ["지배적이다", "관찰", "거부하는", "개선하기"]}, {"enWord": "automatic", "koWord": "자동화되고", "enOptions": [{"word": "automatic", "gloss": "자동적인, 자동화된"}, {"word": "prosocial", "gloss": "친사회적인"}, {"word": "collaboratively", "gloss": "협력적으로"}, {"word": "intense", "gloss": "강렬한, 극심한"}], "koOptions": ["자동화되고", "친사회적", "협력적으로", "강렬하고"]}, {"enWord": "categorized", "koWord": "분류될", "enOptions": [{"word": "categorized", "gloss": "분류되다"}, {"word": "perceive", "gloss": "인식하다, 지각하다"}, {"word": "refusing", "gloss": "거부하다"}, {"word": "monitoring", "gloss": "관찰하다, 감시하다"}], "koOptions": ["분류될", "인식할", "거부하는", "관찰"]}, {"enWord": "restructuring", "koWord": "재구조화", "enOptions": [{"word": "restructuring", "gloss": "재구조화"}, {"word": "indicators", "gloss": "지표, 지표가 되는 것"}, {"word": "goal", "gloss": "목적, 목표"}, {"word": "shift", "gloss": "전환, 변화"}], "koOptions": ["재구조화", "지표", "목적", "전환"]}];
+
+let order2 = DATA.map((_, i) => i);
+let current2 = 0;
+let results2 = []; // { idx, enCorrect, koCorrect }
+let mode2 = "sequential";
+let picked2 = { en: null, ko: null };
+let submitted2 = false;
+let currentBlank2 = null;
+
+const STORAGE_KEY2 = "sw_pbis_quiz2_resume_v1";
+
+function loadSavedResume2() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY2);
+    if (!raw) return 1;
+    const n = parseInt(JSON.parse(raw).nextNum, 10);
+    if (Number.isFinite(n) && n >= 1 && n <= DATA.length) return n;
+    return 1;
+  } catch (e) {
+    return 1;
+  }
+}
+function saveResume2(nextNum) {
+  try {
+    localStorage.setItem(STORAGE_KEY2, JSON.stringify({ nextNum }));
+  } catch (e) {}
+}
+function clearSavedResume2() {
+  try {
+    localStorage.removeItem(STORAGE_KEY2);
+  } catch (e) {}
+}
+let startNum2 = loadSavedResume2();
+
+const app2 = document.getElementById("app2");
+const progressFill2 = document.getElementById("progressFill2");
+const topSub2 = document.getElementById("topSub2");
+const globalHint2 = document.getElementById("globalHint2");
+
+function blankify(text, target) {
+  const idx = text.indexOf(target);
+  if (idx === -1) return escapeHtml(text);
+  const before = text.slice(0, idx);
+  const after = text.slice(idx + target.length);
+  return `${escapeHtml(before)}<span class="blank-box"></span>${escapeHtml(after)}`;
+}
+
+function updateProgress2() {
+  const pct = Math.round((current2 / order2.length) * 100);
+  progressFill2.style.width = pct + "%";
+  const absNum = order2[current2] + 1;
+  topSub2.textContent =
+    order2.length === DATA.length
+      ? `${absNum} / ${DATA.length}`
+      : `${absNum} / ${DATA.length} · 이번 회차 ${current2 + 1}/${order2.length}`;
+}
+
+function renderStart2() {
+  startNum2 = loadSavedResume2();
+  topSub2.textContent = "";
+  progressFill2.style.width = "0%";
+  globalHint2.textContent = "";
+  app2.innerHTML = `
+    <div class="card start">
+      <p class="kicker">SW-PBIS 독해 지문 · 빈칸 채우기 · 총 ${DATA.length}문항</p>
+      <h2>문장을 읽고<br>빈칸에 알맞은 낱말을 고르세요</h2>
+      <p class="desc">영어 문장과 한글 해석을 함께 보여줘요. 각 문항마다 영어 문장 속 빈칸 1개, 한글 해석 속 빈칸 1개를 4지선다로 채우면 됩니다.</p>
+      <div class="option-row">
+        <button class="toggle active" id="optSeq2"><strong>순서대로</strong>지문 순서 그대로 풀기</button>
+        <button class="toggle" id="optShuffle2"><strong>무작위 순서</strong>섞어서 풀기</button>
+      </div>
+      <div id="resumeRow2"></div>
+      <button class="primary" id="startBtn2">시작하기</button>
+    </div>
+  `;
+  document.getElementById("optSeq2").onclick = () => setMode2("sequential");
+  document.getElementById("optShuffle2").onclick = () => setMode2("shuffle");
+  document.getElementById("startBtn2").onclick = startQuiz2;
+  renderResumeRow2();
+}
+
+function renderResumeRow2() {
+  const slot = document.getElementById("resumeRow2");
+  if (mode2 !== "sequential") {
+    slot.innerHTML = "";
+    return;
+  }
+  const options = DATA.map((item, i) => {
+    const preview = item.en.length > 34 ? item.en.slice(0, 34) + "…" : item.en;
+    const sel = i + 1 === startNum2 ? "selected" : "";
+    return `<option value="${i + 1}" ${sel}>${i + 1}번 · ${escapeHtml(preview)}</option>`;
+  }).join("");
+  const saved = loadSavedResume2();
+  const savedNote =
+    saved > 1
+      ? `<p class="score-note" style="margin:0 0 10px;">💾 마지막으로 ${saved - 1}번까지 풀었어요 · 기본값이 ${saved}번으로 맞춰져 있어요. <a href="#" id="resetResumeLink2" style="color:var(--accent);">처음부터 다시 시작</a></p>`
+      : "";
+  slot.innerHTML = `
+    <label class="field-label" for="startNumSelect2">어느 번호부터 이어서 풀까요?</label>
+    <select id="startNumSelect2" class="toggle" style="width:100%; margin-bottom:10px; cursor:pointer;">
+      ${options}
+    </select>
+    ${savedNote}
+    <div style="margin-bottom:10px;"></div>
+  `;
+  document.getElementById("startNumSelect2").onchange = (e) => {
+    startNum2 = parseInt(e.target.value, 10);
+  };
+  const resetLink = document.getElementById("resetResumeLink2");
+  if (resetLink) {
+    resetLink.onclick = (e) => {
+      e.preventDefault();
+      clearSavedResume2();
+      startNum2 = 1;
+      renderResumeRow2();
+    };
+  }
+}
+
+function setMode2(m) {
+  mode2 = m;
+  document.getElementById("optSeq2").classList.toggle("active", m === "sequential");
+  document.getElementById("optShuffle2").classList.toggle("active", m === "shuffle");
+  renderResumeRow2();
+}
+
+function startQuiz2() {
+  if (mode2 === "shuffle") {
+    order2 = shuffle(DATA.map((_, i) => i));
+  } else {
+    const from = Math.min(Math.max(startNum2, 1), DATA.length) - 1;
+    order2 = DATA.map((_, i) => i).slice(from);
+  }
+  current2 = 0;
+  results2 = [];
+  renderQuestion2();
+}
+
+function renderOptionGrid(kind, options, correctText) {
+  return `
+    <div class="option-grid" data-kind="${kind}">
+      ${options
+        .map(
+          (opt, i) => `
+        <button class="opt-btn" data-kind="${kind}" data-i="${i}">
+          <span class="w">${escapeHtml(typeof opt === "string" ? opt : opt.word)}</span>
+          ${typeof opt === "string" ? "" : `<span class="g">${escapeHtml(opt.gloss)}</span>`}
+        </button>`
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function renderQuestion2() {
+  submitted2 = false;
+  picked2 = { en: null, ko: null };
+  updateProgress2();
+  const di = order2[current2];
+  const enSent = DATA[di].en;
+  const koSent = DATA[di].ko;
+  const bRaw = BLANKS[di];
+  const b = {
+    enWord: bRaw.enWord,
+    koWord: bRaw.koWord,
+    enOptions: shuffle(bRaw.enOptions),
+    koOptions: shuffle(bRaw.koOptions),
+  };
+  currentBlank2 = b;
+  globalHint2.textContent = "영어 빈칸과 한글 빈칸을 각각 고른 뒤 제출하세요.";
+
+  app2.innerHTML = `
+    <div class="card">
+      <p class="qnum">문제 ${di + 1}</p>
+
+      <div class="fill-block">
+        <p class="fill-label">① 영어 문장의 빈칸에 알맞은 낱말을 고르세요</p>
+        <p class="fill-sentence en">${blankify(enSent, b.enWord)}</p>
+        ${renderOptionGrid("en", b.enOptions, b.enWord)}
+        <div id="enResultRow"></div>
+      </div>
+
+      <div class="fill-block">
+        <p class="fill-label">② 한글 해석의 빈칸에 알맞은 낱말을 고르세요</p>
+        <p class="fill-sentence ko">${blankify(koSent, b.koWord)}</p>
+        ${renderOptionGrid("ko", b.koOptions, b.koWord)}
+        <div id="koResultRow"></div>
+      </div>
+
+      <button class="primary" id="submitBtn2" disabled>제출</button>
+      <div id="feedbackSlot2"></div>
+    </div>
+  `;
+
+  app2.querySelectorAll(".opt-btn").forEach((btn) => {
+    btn.onclick = () => {
+      if (submitted2) return;
+      const kind = btn.dataset.kind;
+      picked2[kind] = parseInt(btn.dataset.i, 10);
+      app2
+        .querySelectorAll(`.opt-btn[data-kind="${kind}"]`)
+        .forEach((b2) => b2.classList.toggle("picked", b2 === btn));
+      const submitBtn = document.getElementById("submitBtn2");
+      submitBtn.disabled = !(picked2.en !== null && picked2.ko !== null);
+    };
+  });
+
+  document.getElementById("submitBtn2").onclick = submitAnswer2;
+}
+
+function submitAnswer2() {
+  if (submitted2) return;
+  if (picked2.en === null || picked2.ko === null) return;
+  submitted2 = true;
+
+  const di = order2[current2];
+  const b = currentBlank2;
+  const isLast = current2 === order2.length - 1;
+
+  const enBtns = app2.querySelectorAll('.opt-btn[data-kind="en"]');
+  const koBtns = app2.querySelectorAll('.opt-btn[data-kind="ko"]');
+
+  let enCorrect = false;
+  enBtns.forEach((btn, i) => {
+    btn.disabled = true;
+    const isCorrectOpt = b.enOptions[i].word === b.enWord;
+    if (isCorrectOpt) btn.classList.add("correct");
+    if (i === picked2.en) {
+      if (isCorrectOpt) enCorrect = true;
+      else btn.classList.add("wrong");
+    }
+  });
+  let koCorrect = false;
+  koBtns.forEach((btn, i) => {
+    btn.disabled = true;
+    const isCorrectOpt = b.koOptions[i] === b.koWord;
+    if (isCorrectOpt) btn.classList.add("correct");
+    if (i === picked2.ko) {
+      if (isCorrectOpt) koCorrect = true;
+      else btn.classList.add("wrong");
+    }
+  });
+
+  document.getElementById("enResultRow").innerHTML = `
+    <div class="fill-result-row">
+      <span class="fill-tag ${enCorrect ? "ok" : "no"}">${enCorrect ? "정답" : "오답"}</span>
+      <span>정답: <strong>${escapeHtml(b.enWord)}</strong> (${escapeHtml(b.enOptions.find((o) => o.word === b.enWord).gloss)})</span>
+    </div>`;
+  document.getElementById("koResultRow").innerHTML = `
+    <div class="fill-result-row">
+      <span class="fill-tag ${koCorrect ? "ok" : "no"}">${koCorrect ? "정답" : "오답"}</span>
+      <span>정답: <strong>${escapeHtml(b.koWord)}</strong></span>
+    </div>`;
+
+  results2.push({ idx: di, enCorrect, koCorrect });
+
+  if (mode2 === "sequential") {
+    const nextAbsNum = di + 2;
+    saveResume2(isLast ? 1 : Math.min(nextAbsNum, DATA.length));
+  }
+
+  document.getElementById("submitBtn2").outerHTML = `<button class="primary" id="nextBtn2">${
+    isLast ? "결과 보기" : "다음 문제"
+  }</button>`;
+  document.getElementById("nextBtn2").onclick = () => {
+    if (isLast) renderResult2();
+    else {
+      current2++;
+      renderQuestion2();
+    }
+  };
+}
+
+function renderResult2() {
+  progressFill2.style.width = "100%";
+  topSub2.textContent = `${order2[order2.length - 1] + 1} / ${DATA.length}`;
+  globalHint2.textContent = "";
+
+  const totalBlanks = results2.length * 2;
+  const correctBlanks = results2.reduce((s, r) => s + (r.enCorrect ? 1 : 0) + (r.koCorrect ? 1 : 0), 0);
+  const bothCorrect = results2.filter((r) => r.enCorrect && r.koCorrect).length;
+  const pct = Math.round((correctBlanks / totalBlanks) * 100);
+
+  const rows = order2
+    .map((di, i) => {
+      const r = results2[i];
+      const enSent = DATA[di].en;
+      const koSent = DATA[di].ko;
+      const b = BLANKS[di];
+      return `
+        <div class="review-item">
+          <div class="row1">
+            <span class="idx">문제 ${di + 1}</span>
+            <span class="sc" style="color:${r.enCorrect && r.koCorrect ? "var(--good)" : "var(--warn)"}">
+              영어 ${r.enCorrect ? "✓" : "✗"} · 한글 ${r.koCorrect ? "✓" : "✗"}
+            </span>
+          </div>
+          <div class="en">${escapeHtml(enSent)}</div>
+          <div class="ko-correct">정답: ${escapeHtml(b.enWord)} (${escapeHtml(b.enOptions.find((o) => o.word === b.enWord).gloss)}) / ${escapeHtml(b.koWord)}</div>
+        </div>`;
+    })
+    .join("");
+
+  app2.innerHTML = `
+    <div class="card result">
+      <h2>빈칸 채우기 완료</h2>
+      <div class="avg">${pct}점</div>
+      <div class="avg-label">전체 ${totalBlanks}빈칸 중 ${correctBlanks}개 정답 · 두 빈칸 모두 맞춘 문항 ${bothCorrect}/${results2.length}</div>
+      <div class="review-list">${rows}</div>
+      <button class="primary" id="retryBtn2">다시 풀기</button>
+      <button class="ghost" id="homeBtn2">처음 화면으로</button>
+    </div>
+  `;
+  document.getElementById("retryBtn2").onclick = startQuiz2;
+  document.getElementById("homeBtn2").onclick = renderStart2;
+}
+
+// ---- 탭 전환 ----
+document.getElementById("tabPage1").onclick = () => {
+  document.getElementById("tabPage1").classList.add("active");
+  document.getElementById("tabPage2").classList.remove("active");
+  document.getElementById("page1Root").style.display = "";
+  document.getElementById("page2Root").style.display = "none";
+};
+document.getElementById("tabPage2").onclick = () => {
+  document.getElementById("tabPage2").classList.add("active");
+  document.getElementById("tabPage1").classList.remove("active");
+  document.getElementById("page2Root").style.display = "";
+  document.getElementById("page1Root").style.display = "none";
+};
+
+renderStart2();
+
 </script>
 </body>
 </html>
