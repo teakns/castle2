@@ -527,6 +527,37 @@ let answered = false;
 let results = []; // {idx, userText, score}
 let mode = "sequential";
 
+const STORAGE_KEY = "sw_pbis_quiz_resume_v1";
+
+function loadSavedResume() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return 1;
+    const parsed = JSON.parse(raw);
+    const n = parseInt(parsed.nextNum, 10);
+    if (Number.isFinite(n) && n >= 1 && n <= DATA.length) return n;
+    return 1;
+  } catch (e) {
+    return 1;
+  }
+}
+
+function saveResume(nextNum) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ nextNum }));
+  } catch (e) {
+    /* 저장이 안 되어도 학습 자체는 계속 진행됩니다 */
+  }
+}
+
+function clearSavedResume() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (e) {}
+}
+
+let startNum = loadSavedResume(); // 순서대로 모드에서 이어풀기 시작 번호 (1-based)
+
 const app = document.getElementById("app");
 const progressFill = document.getElementById("progressFill");
 const topSub = document.getElementById("topSub");
@@ -607,7 +638,11 @@ function scoreLabel(score) {
 function updateProgress() {
   const pct = Math.round((current / order.length) * 100);
   progressFill.style.width = pct + "%";
-  topSub.textContent = `${Math.min(current + 1, order.length)} / ${order.length}`;
+  const absNum = order[current] + 1;
+  topSub.textContent =
+    order.length === DATA.length
+      ? `${absNum} / ${DATA.length}`
+      : `${absNum} / ${DATA.length} · 이번 회차 ${current + 1}/${order.length}`;
 }
 
 function renderStart() {
@@ -618,27 +653,73 @@ function renderStart() {
     <div class="card start">
       <p class="kicker">SW-PBIS 독해 지문 · 총 ${DATA.length}문장</p>
       <h2>영어 문장을 읽고<br>한글 해석을 적어보세요</h2>
-      <p class="desc">시험범위 지문의 모든 문장이 순서대로 출제됩니다. 문장을 읽고 한글 뜻을 적은 뒤 제출하면, 정답과 함께 참고용 유사도 점수를 보여줘요.</p>
+      <p class="desc">시험범위 지문의 모든 문장이 출제됩니다. 문장을 읽고 한글 뜻을 적은 뒤 제출하면, 정답과 함께 참고용 유사도 점수를 보여줘요.</p>
       <div class="option-row">
         <button class="toggle active" id="optSeq"><strong>순서대로</strong>지문 순서 그대로 풀기</button>
         <button class="toggle" id="optShuffle"><strong>무작위 순서</strong>섞어서 풀기</button>
       </div>
+      <div id="resumeRow"></div>
       <button class="primary" id="startBtn">시작하기</button>
     </div>
   `;
   document.getElementById("optSeq").onclick = () => setMode("sequential");
   document.getElementById("optShuffle").onclick = () => setMode("shuffle");
   document.getElementById("startBtn").onclick = startQuiz;
+  renderResumeRow();
+}
+
+function renderResumeRow() {
+  const slot = document.getElementById("resumeRow");
+  if (mode !== "sequential") {
+    slot.innerHTML = "";
+    return;
+  }
+  const options = DATA.map((item, i) => {
+    const preview = item.en.length > 34 ? item.en.slice(0, 34) + "…" : item.en;
+    const sel = i + 1 === startNum ? "selected" : "";
+    return `<option value="${i + 1}" ${sel}>${i + 1}번 · ${escapeHtml(preview)}</option>`;
+  }).join("");
+  const saved = loadSavedResume();
+  const savedNote =
+    saved > 1
+      ? `<p class="score-note" style="margin:0 0 10px;">💾 마지막으로 ${saved - 1}번까지 풀었어요 · 기본값이 ${saved}번으로 맞춰져 있어요. <a href="#" id="resetResumeLink" style="color:var(--accent);">처음부터 다시 시작</a></p>`
+      : "";
+  slot.innerHTML = `
+    <label class="field-label" for="startNumSelect">어느 번호부터 이어서 풀까요?</label>
+    <select id="startNumSelect" class="toggle" style="width:100%; margin-bottom:10px; cursor:pointer;">
+      ${options}
+    </select>
+    ${savedNote}
+    <div style="margin-bottom:10px;"></div>
+  `;
+  document.getElementById("startNumSelect").onchange = (e) => {
+    startNum = parseInt(e.target.value, 10);
+  };
+  const resetLink = document.getElementById("resetResumeLink");
+  if (resetLink) {
+    resetLink.onclick = (e) => {
+      e.preventDefault();
+      clearSavedResume();
+      startNum = 1;
+      renderResumeRow();
+    };
+  }
 }
 
 function setMode(m) {
   mode = m;
   document.getElementById("optSeq").classList.toggle("active", m === "sequential");
   document.getElementById("optShuffle").classList.toggle("active", m === "shuffle");
+  renderResumeRow();
 }
 
 function startQuiz() {
-  order = mode === "shuffle" ? shuffle(DATA.map((_, i) => i)) : DATA.map((_, i) => i);
+  if (mode === "shuffle") {
+    order = shuffle(DATA.map((_, i) => i));
+  } else {
+    const from = Math.min(Math.max(startNum, 1), DATA.length) - 1;
+    order = DATA.map((_, i) => i).slice(from);
+  }
   current = 0;
   results = [];
   answered = false;
@@ -652,7 +733,7 @@ function renderQuestion() {
   globalHint.textContent = "Ctrl/⌘+Enter 로도 제출할 수 있어요.";
   app.innerHTML = `
     <div class="card">
-      <p class="qnum">문제 ${current + 1}</p>
+      <p class="qnum">문제 ${order[current] + 1}</p>
       <p class="sentence-en">${escapeHtml(item.en)}</p>
       <label class="field-label" for="answerBox">이 문장의 한글 해석을 적어보세요</label>
       <textarea id="answerBox" placeholder="여기에 한글로 해석을 입력하세요..."></textarea>
@@ -684,6 +765,11 @@ function submitAnswer() {
 
   document.getElementById("submitBtn").remove();
   document.getElementById("answerBox").setAttribute("disabled", "true");
+
+  if (mode === "sequential") {
+    const nextAbsNum = order[current] + 2; // 다음에 풀 절대 문장 번호
+    saveResume(isLast ? 1 : Math.min(nextAbsNum, DATA.length));
+  }
 
   const slot = document.getElementById("feedbackSlot");
   slot.innerHTML = `
@@ -717,7 +803,7 @@ function submitAnswer() {
 
 function renderResult() {
   progressFill.style.width = "100%";
-  topSub.textContent = `${order.length} / ${order.length}`;
+  topSub.textContent = `${order[order.length - 1] + 1} / ${DATA.length}`;
   globalHint.textContent = "";
   const avg = Math.round(results.reduce((s, r) => s + r.score, 0) / results.length);
   const goodCount = results.filter((r) => r.score >= 80).length;
@@ -731,7 +817,7 @@ function renderResult() {
       return `
         <div class="review-item">
           <div class="row1">
-            <span class="idx">문제 ${i + 1}</span>
+            <span class="idx">문제 ${di + 1}</span>
             <span class="sc" style="color:${colorVar}">${r.score}점</span>
           </div>
           <div class="en">${escapeHtml(item.en)}</div>
