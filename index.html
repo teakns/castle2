@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>독해 테스트 · SW-PBIS 지문</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5EF;
+    --surface: #FFFFFF;
+    --ink: #22281F;
+    --ink-soft: #5B6455;
+    --line: #DEDACB;
+    --accent: #2F6F63;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #E4EEEA;
+    --warn: #B5502E;
+    --warn-soft: #F6E7DF;
+    --good: #2F6F63;
+    --good-soft: #E4EEEA;
+    --mid: #9A7B2E;
+    --mid-soft: #F3ECD8;
+    --radius: 14px;
+    --serif: "Source Serif 4", Georgia, "Noto Serif KR", serif;
+    --sans: "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #14170F;
+      --surface: #1D2118;
+      --ink: #EDEAE0;
+      --ink-soft: #A6AC9C;
+      --line: #33392A;
+      --accent: #6FBFA8;
+      --accent-ink: #0F1712;
+      --accent-soft: #202C26;
+      --warn: #E08A63;
+      --warn-soft: #2E2119;
+      --good: #6FBFA8;
+      --good-soft: #1B2A24;
+      --mid: #D7B25C;
+      --mid-soft: #2A2517;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14170F;
+    --surface: #1D2118;
+    --ink: #EDEAE0;
+    --ink-soft: #A6AC9C;
+    --line: #33392A;
+    --accent: #6FBFA8;
+    --accent-ink: #0F1712;
+    --accent-soft: #202C26;
+    --warn: #E08A63;
+    --warn-soft: #2E2119;
+    --good: #6FBFA8;
+    --good-soft: #1B2A24;
+    --mid: #D7B25C;
+    --mid-soft: #2A2517;
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    min-height: 100%;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 28px 20px 64px;
+  }
+
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    gap: 12px;
+  }
+
+  header.top h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.15rem;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  header.top .sub {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  .progress-track {
+    height: 6px;
+    background: var(--line);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 999px;
+    transition: width 0.35s ease;
+    width: 0%;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+  }
+
+  /* ---- start screen ---- */
+  .start .kicker {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin: 0 0 6px;
+  }
+  .start h2 {
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    line-height: 1.35;
+    margin: 0 0 14px;
+  }
+  .start p.desc {
+    color: var(--ink-soft);
+    line-height: 1.7;
+    margin: 0 0 22px;
+    font-size: 0.95rem;
+  }
+  .option-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+  }
+  .toggle {
+    flex: 1 1 140px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .toggle strong { display: block; font-size: 0.95rem; margin-bottom: 2px; }
+  .toggle.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  button.primary {
+    width: 100%;
+    padding: 14px 18px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  button.primary:active { transform: translateY(1px); }
+  button.primary:focus-visible,
+  .toggle:focus-visible,
+  textarea:focus-visible,
+  button.ghost:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  button.ghost {
+    width: 100%;
+    padding: 12px 18px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 0.92rem;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  /* ---- quiz screen ---- */
+  .qnum {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+  }
+  .sentence-en {
+    font-family: var(--serif);
+    font-size: 1.28rem;
+    line-height: 1.6;
+    color: var(--ink);
+    margin: 0 0 22px;
+  }
+  label.field-label {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 110px;
+    resize: vertical;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 0.98rem;
+    line-height: 1.6;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+
+  .feedback {
+    margin-top: 18px;
+    padding: 16px 16px 6px;
+    border-top: 1px dashed var(--line);
+    animation: reveal 0.25s ease;
+  }
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .score-badge {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.5rem;
+    padding: 6px 14px;
+    border-radius: 10px;
+  }
+  .score-badge.good { background: var(--good-soft); color: var(--good); }
+  .score-badge.mid { background: var(--mid-soft); color: var(--mid); }
+  .score-badge.low { background: var(--warn-soft); color: var(--warn); }
+  .score-note { font-size: 0.85rem; color: var(--ink-soft); }
+
+  .answer-block {
+    margin-bottom: 14px;
+  }
+  .answer-block .label {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .answer-block .text {
+    font-size: 0.96rem;
+    line-height: 1.65;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+  }
+  .answer-block.correct .text {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .nav-row {
+    margin-top: 20px;
+  }
+
+  footer.hint {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 0.78rem;
+    margin-top: 16px;
+    line-height: 1.6;
+  }
+
+  /* ---- result screen ---- */
+  .result h2 {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    margin: 0 0 4px;
+  }
+  .result .avg {
+    font-family: var(--serif);
+    font-size: 2.6rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 10px 0 4px;
+  }
+  .result .avg-label {
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+    margin-bottom: 22px;
+  }
+  .review-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 20px 0 24px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .review-item {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .review-item .row1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .review-item .idx {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+  }
+  .review-item .sc {
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  .review-item .en {
+    font-family: var(--serif);
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+    line-height: 1.5;
+  }
+  .review-item .ko-user {
+    font-size: 0.86rem;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .review-item .ko-correct {
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 420px) {
+    .card { padding: 22px 16px; }
+    .sentence-en { font-size: 1.14rem; }
+    .start h2 { font-size: 1.35rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>📖 독해 테스트</h1>
+    <div class="sub" id="topSub"></div>
+  </header>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div id="app"></div>
+
+  <footer class="hint" id="globalHint"></footer>
+</div>
+
+<script>
+const DATA = [
+["Schoolwide PBIS(Positive Behavior Intervention and Supports) is an exciting and effective response to the problems of school violence, disruptive behavior, high levels of disciplinary actions, and poor school climate.",
+"학교 차원의 PBIS(긍정적 행동중재 및 지원)는 학교폭력, 문제행동, 잦은 징계, 나쁜 학교 분위기와 같은 문제들에 대한 흥미롭고 효과적인 대응책이다."],
+["SW-PBIS extends and expands the successes of behavioral science, especially applied behavior analysis, to making schools more effective for all students.",
+"SW-PBIS는 행동과학, 특히 응용행동분석의 성과를 확장하여 모든 학생을 위해 학교를 더 효과적으로 만드는 데 적용한다."],
+["Positive behavioral support is a general term that refers to the application of positive behavioral interventions and systems to achieve socially important behavior change.",
+"긍정적 행동지원이란 사회적으로 중요한 행동 변화를 이루기 위해 긍정적 행동중재와 시스템을 적용하는 것을 가리키는 포괄적인 용어이다."],
+["Positive behavioral support is not a new intervention package, nor a new theory of behavior, but an application of a behaviorally-based systems approach to enhancing the capacity of schools, families, and communities to design effective environments that improve the fit or link between research-validated practices and the environments in which teaching and learning occur.",
+"긍정적 행동지원은 새로운 중재 패키지도, 새로운 행동 이론도 아니며, 학교·가정·지역사회가 연구로 검증된 실천 방법과 실제 교수-학습이 이루어지는 환경 사이의 적합성(연결성)을 향상시키는 효과적인 환경을 설계할 수 있는 역량을 강화하기 위해 행동주의 기반의 시스템적 접근을 적용한 것이다."],
+["Attention is focused on creating and sustaining school environments that improve lifestyle results (personal, health, social, family, work, recreation, etc.) for all children and youth by making problem behavior less effective, efficient, and relevant, and desired behavior more functional.",
+"초점은 문제행동을 덜 효과적이고 덜 효율적이며 덜 필요하게 만들고, 바람직한 행동은 더 기능적으로 만듦으로써, 모든 아동과 청소년의 삶의 결과(개인, 건강, 사회, 가정, 직업, 여가 등)를 향상시키는 학교 환경을 만들고 유지하는 데 맞춰져 있다."],
+["In addition, the use of culturally appropriate interventions is emphasized.",
+"또한 문화적으로 적절한 중재를 사용하는 것이 강조된다."],
+["PBIS represents a fundamental shift in managing unacceptable behavior from reactive, punitive responses to challenging behavior to a proactive emphasis on the prevention of behavioral problems by using positive, instructional, research-based strategies to teach and encourage appropriate behavior and manage the learning environment.",
+"PBIS는 문제행동에 대한 반응적·처벌적 대응에서 벗어나, 긍정적이고 교육적이며 연구기반의 전략을 사용해 적절한 행동을 가르치고 격려하며 학습 환경을 관리함으로써 행동 문제를 예방하는 데 초점을 두는 사전예방적 접근으로의 근본적인 전환을 의미한다."],
+["PBIS is the integrated application of (a) behavioral science, (b) practical interventions, (c) social values, and (d) a systems perspective to design interventions at the individual, classroom, and schoolwide levels for the purpose of increasing success for all students.",
+"PBIS는 모든 학생의 성공을 높이기 위해 개인·학급·학교 전체 수준에서 중재를 설계하도록 (a) 행동과학, (b) 실제적 중재, (c) 사회적 가치, (d) 시스템적 관점을 통합적으로 적용한 것이다."],
+["The techniques presented in this text reflect PBIS methods for preventing inappropriate behavior, teaching and encouraging appropriate behavior, and managing challenging behavior in all students, but particularly in students with mild to moderate disabilities, at the individual, classroom, and schoolwide levels.",
+"이 글에서 제시된 기법들은 개인·학급·학교 전체 수준에서 부적절한 행동을 예방하고 적절한 행동을 가르치고 격려하며 문제행동을 관리하기 위한 PBIS 방법을 반영하는데, 이는 모든 학생, 특히 경도에서 중등도의 장애를 지닌 학생들에게 특히 적용된다."],
+["The goal of encouraging appropriate behavior and preventing and managing inappropriate behavior is a demanding task because teachers are expected to successfully teach a wide range of students, including students who are not well prepared for the demands of school and students who are not highly motivated to behave appropriately and learn.",
+"적절한 행동을 격려하고 부적절한 행동을 예방·관리하는 목표는 매우 힘든 과제인데, 이는 교사가 학교의 요구에 잘 준비되지 않은 학생과 적절히 행동하고 배우려는 동기가 낮은 학생을 포함한 다양한 학생들을 성공적으로 가르쳐야 하기 때문이다."],
+["The task is complicated by the fact that schools serve a diverse population of students from varied cultural, ethnic, and religious backgrounds who have a range of abilities and learning histories.",
+"이 과제는 학교가 다양한 문화적·민족적·종교적 배경을 가지고, 각기 다른 능력과 학습 이력을 지닌 다양한 학생들을 대상으로 한다는 사실 때문에 더욱 복잡해진다."],
+["But the good news is that teachers have the power to meet this challenge by using a wide array of research-based tools to support appropriate behavior, to prevent and manage behavioral problems, and to deliver instruction.",
+"그러나 다행히도 교사는 적절한 행동을 지원하고 행동 문제를 예방·관리하며 수업을 전달하기 위한 다양한 연구기반 도구들을 활용함으로써 이 과제를 해결할 힘을 가지고 있다."],
+["Understanding the behavior assumptions will help teachers become more independent problem solvers when faced with behavioral challenges.",
+"행동에 관한 이러한 가정들을 이해하면 교사는 행동 문제에 직면했을 때 더 독립적으로 문제를 해결할 수 있게 된다."],
+["Changing inappropriate student behavior requires changing the teacher's behavior.",
+"학생의 부적절한 행동을 바꾸려면 교사의 행동을 바꾸어야 한다."],
+["Some students require more time, attention, and structure than others.",
+"어떤 학생들은 다른 학생들보다 더 많은 시간, 관심, 구조화를 필요로 한다."],
+["Students exhibit both desirable and undesirable behaviors for a reason.",
+"학생들은 바람직한 행동이든 바람직하지 않은 행동이든 나름의 이유가 있어서 그 행동을 보인다."],
+["Many behavioral challenges reflect learning difficulties.",
+"많은 행동 문제는 학습의 어려움을 반영한다."],
+["Most inappropriate behavior is predictably linked to specific contexts and activities.",
+"대부분의 부적절한 행동은 특정한 맥락 및 활동과 예측 가능하게 연결되어 있다."],
+["It is more efficient and more effective to change student behavior by using positive strategies rather than punitive strategies.",
+"처벌적 전략보다 긍정적 전략을 사용하여 학생의 행동을 바꾸는 것이 더 효율적이고 효과적이다."],
+["It is more efficient and effective to use proactive, preventive strategies rather than relying on reactive strategies after a behavioral problem has already developed.",
+"행동 문제가 이미 발생한 후 반응적 전략에 의존하는 것보다 사전예방적 전략을 사용하는 것이 더 효율적이고 효과적이다."],
+["Students benefit when general educators and special educators work together to meet the needs of all students.",
+"일반교사와 특수교사가 협력하여 모든 학생의 요구를 충족시킬 때 학생들은 도움을 받는다."],
+["Students benefit when educators maintain close communication with parents in order to share information and collaboratively plan educational and home programs.",
+"교육자가 정보를 공유하고 교육 및 가정 프로그램을 협력적으로 계획하기 위해 부모와 긴밀한 소통을 유지할 때 학생들은 도움을 받는다."],
+["A defining characteristic of SW-PBIS is its fundamental three-tiered prevention and intervention approach.",
+"SW-PBIS의 핵심적인 특징은 근본적으로 3단계 예방 및 중재 접근을 취한다는 것이다."],
+["This three-tiered model includes three levels of prevention and intervention that are distinguished by the number of students affected and the intensity of the support services provided.",
+"이 3단계 모델은 영향을 받는 학생 수와 제공되는 지원 서비스의 강도에 따라 구분되는 세 가지 수준의 예방 및 중재를 포함한다."],
+["The three levels in this model serve as a structure through which school personnel provide proactive, preventive interventions for all students, while designing timely, efficient, and effective interventions for students who need more intensive services.",
+"이 모델의 세 가지 수준은 학교 직원들이 모든 학생에게 사전예방적 중재를 제공하는 동시에, 더 집중적인 서비스가 필요한 학생들을 위해 시기적절하고 효율적이며 효과적인 중재를 설계할 수 있게 하는 구조로 작동한다."],
+["Because the proactive and preventive elements of SW-PBIS meet the needs of most students, school personnel are able to better focus resources on students who are unresponsive to other schoolwide strategies.",
+"SW-PBIS의 사전예방적 요소가 대부분 학생의 요구를 충족시키기 때문에, 학교 직원들은 다른 학교 차원의 전략에 반응하지 않는 학생들에게 자원을 더 집중할 수 있다."],
+["At the primary level(also referred to as the universal level), universal interventions are used that incorporate strategies to help ensure that all students exhibit appropriate behavior and to reduce the number of new cases of problem behavior and academic difficulties.",
+"1차 수준(보편적 수준이라고도 함)에서는 모든 학생이 적절한 행동을 보이도록 보장하고 새로운 문제행동 및 학업 어려움 사례의 수를 줄이는 전략을 포함하는 보편적 중재가 사용된다."],
+["Universal interventions focus on all students and are used by all staff in all settings.",
+"보편적 중재는 모든 학생을 대상으로 하며, 모든 환경에서 모든 교직원에 의해 사용된다."],
+["Secondary-level prevention(also referred to as the targeted level) relies on interventions for target students who are considered at risk for chronic or serious problem behavior or academic failure, or who continue to exhibit high levels of inappropriate behavior or academic skill deficits despite exposure to universal interventions.",
+"2차 수준의 예방(표적 수준이라고도 함)은 만성적이거나 심각한 문제행동 또는 학업 실패의 위험이 있다고 여겨지거나, 보편적 중재를 받았음에도 불구하고 여전히 높은 수준의 부적절한 행동이나 학업 기술 결손을 보이는 표적 학생들을 위한 중재에 의존한다."],
+["The goal of the procedures and interventions at this level is to identify problems early and to provide intensive, targeted supports to remediate those problems.",
+"이 수준에서의 절차와 중재의 목표는 문제를 조기에 발견하고, 그 문제를 개선하기 위한 집중적이고 표적화된 지원을 제공하는 것이다."],
+["Tertiary-level intervention focuses on the needs of individual students who require the most intensive, individualized, and long-term interventions, approximately 1% to 5% of a school's population.",
+"3차 수준의 중재는 학교 전체 학생의 약 1~5%에 해당하며 가장 집중적이고 개별화되고 장기적인 중재를 필요로 하는 개별 학생들의 요구에 초점을 맞춘다."],
+["The goal of tertiary-level supports is to reduce the frequency and intensity of challenging behavior while increasing the student's repertoire of functional, appropriate behaviors.",
+"3차 수준 지원의 목표는 문제행동의 빈도와 강도를 줄이는 동시에 학생의 기능적이고 적절한 행동 레퍼토리를 늘리는 것이다."],
+["In the three-tiered model of PBIS, attention to teaching social skills could be appropriate as part of systems at the universal level(Tier 1), the targeted level(Tier 2), or the tertiary level(Tier 3).",
+"PBIS의 3단계 모델에서 사회기술 교수에 대한 관심은 보편적 수준(1단계), 표적 수준(2단계), 또는 3차 수준(3단계)의 시스템의 일부로서 적절할 수 있다."],
+["At the universal level, social skills would consist of schoolwide instruction in prosocial behaviors for all students.",
+"보편적 수준에서 사회기술은 모든 학생을 대상으로 한 친사회적 행동에 대한 학교 차원의 교수로 구성된다."],
+["Targeted-level social skills interventions would typically consist of small-group instruction for students who need additional supports beyond those supplied at the universal level.",
+"표적 수준의 사회기술 중재는 일반적으로 보편적 수준에서 제공되는 것 이상의 추가 지원이 필요한 학생들을 위한 소집단 교수로 구성된다."],
+["Social skills interventions at the tertiary level may include comprehensive, individualized instruction in social skills; self-control skills; or any area in which there is a social/behavioral deficit.",
+"3차 수준의 사회기술 중재는 사회기술, 자기통제 기술, 또는 사회적·행동적 결손이 있는 모든 영역에 대한 포괄적이고 개별화된 교수를 포함할 수 있다."],
+["Reinforcement is a process in which a behavior is strengthened as a result of a consequence that follows the behavior.",
+"강화란 행동 뒤에 따르는 결과로 인해 그 행동이 강화되는 과정이다."],
+["Reinforcement can increase the frequency, rate, intensity, duration, or form of a behavior.",
+"강화는 행동의 빈도, 비율, 강도, 지속시간, 또는 형태를 증가시킬 수 있다."],
+["Whether or not a consequence is reinforcing can be determined only by monitoring the effect of that consequence on the targeted behavior.",
+"어떤 결과가 강화적인지 여부는 그 결과가 표적 행동에 미치는 영향을 관찰함으로써만 판단할 수 있다."],
+["If a behavior occurs more frequently, is present in greater magnitude or intensity, lasts longer, or improves in form as a result of the consequence, reinforcement has occurred.",
+"결과로 인해 행동이 더 자주 일어나거나, 더 큰 크기나 강도로 나타나거나, 더 오래 지속되거나, 형태가 개선된다면 강화가 일어난 것이다."],
+["If the behavior does not increase in frequency, rate, intensity, or duration, or improve in form, reinforcement has not occurred, even if that was the goal of using the consequence.",
+"행동의 빈도, 비율, 강도, 지속시간이 증가하지 않거나 형태가 개선되지 않는다면, 그것이 그 결과를 사용한 목적이었다 하더라도 강화는 일어나지 않은 것이다."],
+["Delivering behavior-specific praise is a relatively simple task that is less intrusive and requires fewer resources than other reinforcement strategies.",
+"구체적 행동에 대한 칭찬을 제공하는 것은 비교적 간단한 과제로, 다른 강화 전략보다 덜 침해적이며 더 적은 자원을 필요로 한다."],
+["Most importantly, a number of studies have shown that giving praise can increase the frequency of a desired behavior in a variety of student populations.",
+"가장 중요한 점은, 여러 연구에서 칭찬을 하는 것이 다양한 학생 집단에서 바람직한 행동의 빈도를 증가시킬 수 있음을 보여주었다는 것이다."],
+["Contingent teacher praise has been shown to increase task engagement, desired academic response, and compliance and to reduce off-task, non-compliant, or incorrect responses.",
+"조건부(수반적) 교사 칭찬은 과제 참여, 바람직한 학업적 반응, 순응을 증가시키고 과제 이탈, 비순응, 또는 부정확한 반응을 줄이는 것으로 나타났다."],
+["Simply put, when teachers give high levels of contingent praise, students tend to exhibit higher levels of appropriate behavior; conversely, disruptive behavior increases when teachers offer less praise.",
+"간단히 말해, 교사가 높은 수준의 수반적 칭찬을 할 때 학생들은 더 높은 수준의 적절한 행동을 보이는 경향이 있으며, 반대로 교사가 칭찬을 적게 할 때 방해행동이 증가한다."],
+["The goal of behavioral interventions is to move the student from external behavioral supports to self-management.",
+"행동중재의 목표는 학생을 외부의 행동적 지원으로부터 자기관리로 이동시키는 것이다."],
+["External contingency systems are often necessary to establish new behaviors or to improve the fluency of behaviors.",
+"새로운 행동을 확립하거나 행동의 유창성을 향상시키기 위해서는 흔히 외부적 수반성 체계가 필요하다."],
+["Once those behaviors are established, educators should plan how to bring them under students' internal control rather than continuing to rely on external management systems to encourage display of the targeted behaviors.",
+"그러한 행동이 확립되고 나면, 교육자는 표적 행동의 출현을 촉진하기 위해 외부 관리 체계에 계속 의존하기보다는 그 행동을 학생의 내적 통제하에 두는 방법을 계획해야 한다."],
+["To accomplish this goal, students must be able to use the types of self-management skills that enable any individual to independently initiate, guide, and inhibit behaviors in order to successfully handle academic and social situations in school and in other environments.",
+"이 목표를 달성하기 위해서는, 학생이 학교와 다른 환경에서 학업적·사회적 상황을 성공적으로 다루기 위해 스스로 행동을 시작하고 조절하고 억제할 수 있게 해주는 자기관리 기술을 사용할 수 있어야 한다."],
+["A substantial body of research has documented the efficacy of teaching self-management skills to increase appropriate behaviors and decrease inappropriate behaviors in children and adolescents with all types of disabilities and behavioral needs.",
+"상당한 양의 연구가 모든 유형의 장애 및 행동적 요구를 지닌 아동과 청소년에게서 적절한 행동을 늘리고 부적절한 행동을 줄이기 위해 자기관리 기술을 가르치는 것의 효과를 입증해 왔다."],
+["From a behavioral perspective, self-management skills include five skill areas: goal setting, self-monitoring, self-evaluation, self-instruction, and self-reinforcement.",
+"행동주의적 관점에서 자기관리 기술은 목표설정, 자기점검, 자기평가, 자기교수, 자기강화라는 다섯 가지 기술 영역을 포함한다."],
+["Students' behaviors often are indicators of their emotions.",
+"학생들의 행동은 흔히 그들의 정서를 나타내는 지표이다."],
+["Some students identified as having emotional disturbance experience anxiety as the result of excessive fears.",
+"정서장애로 판별된 일부 학생들은 지나친 두려움의 결과로 불안을 경험한다."],
+["They may be afraid of going to school, afraid of enclosed spaces or other specific types of physical environments, afraid of potential catastrophic events, or afraid of becoming ill.",
+"그들은 학교에 가는 것, 밀폐된 공간이나 특정한 물리적 환경, 일어날 수 있는 재난적 사건, 또는 병에 걸리는 것을 두려워할 수 있다."],
+["Fears such as these are intense and quite real to the students.",
+"이러한 두려움은 학생들에게 매우 강렬하고 실제적인 것이다."],
+["Other students with emotional and behavior disorders may feel anger.",
+"정서행동장애가 있는 다른 학생들은 분노를 느낄 수 있다."],
+["They may respond to your request for them to complete an assignment by refusing to work at all.",
+"그들은 과제를 완료하라는 요청에 아예 과제를 거부하는 것으로 반응할 수 있다."],
+["They may perceive that a classmate who smiles at them is making fun of them.",
+"그들은 자신에게 미소 짓는 급우가 자신을 놀리고 있다고 인식할 수 있다."],
+["They may run from the classroom when corrected for using profanity.",
+"그들은 욕설 사용에 대해 훈계를 받으면 교실에서 뛰쳐나갈 수 있다."],
+["Often when students feel such anger, they display it through the externalizing behaviors of aggression, such as hitting, sitting, fighting.",
+"학생들이 이러한 분노를 느낄 때, 흔히 때리기·(sitting, 원문 표기 그대로)·싸움과 같은 공격성의 외현화 행동을 통해 그것을 표출한다."],
+["Affection is essential for physical and mental health and an important means of initiating and maintaining friendships and relationships.",
+"애정은 신체적·정신적 건강에 필수적이며 우정과 관계를 시작하고 유지하는 중요한 수단이다."],
+["Parent and specialists in autism spectrum disorders are increasingly recognizing that children and adults with an autism spectrum disorders need information and guidance in the understanding and expression of affection.",
+"자폐스펙트럼장애 분야의 부모와 전문가들은 자폐스펙트럼장애가 있는 아동과 성인이 애정을 이해하고 표현하는 데 있어 정보와 지도가 필요하다는 점을 점점 더 인식하고 있다."],
+["Negative thinking dominates when a person experiences depression.",
+"사람이 우울을 경험할 때는 부정적 사고가 지배적이다."],
+["The depressed person can experience negative thoughts as being beyond their control, thereby allowing them to become automatic and self-perpetuating.",
+"우울한 사람은 부정적 사고를 자신이 통제할 수 없는 것으로 경험할 수 있으며, 이로 인해 그 사고는 자동화되고 스스로 지속되게 된다."],
+["Negative thinking can be categorized into a number of common patterns called \"cognitive distortions.\"",
+"부정적 사고는 \"인지왜곡\"이라 불리는 여러 공통된 패턴으로 분류될 수 있다."],
+["The cognitive therapist provides techniques to give the client a greater degree of control over negative thinking by correcting these distortions or correcting thinking errors that abet the distortions, in a process called cognitive restructuring.",
+"인지치료자는 이러한 왜곡을 교정하거나 그 왜곡을 부추기는 사고 오류를 교정함으로써, 내담자가 부정적 사고에 대해 더 큰 통제력을 갖도록 하는 기법을 \"인지재구조화\"라는 과정을 통해 제공한다."]
+].map(([en, ko]) => ({ en, ko }));
+
+let order = DATA.map((_, i) => i);
+let current = 0;
+let answered = false;
+let results = []; // {idx, userText, score}
+let mode = "sequential";
+
+const app = document.getElementById("app");
+const progressFill = document.getElementById("progressFill");
+const topSub = document.getElementById("topSub");
+const globalHint = document.getElementById("globalHint");
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function normalize(text) {
+  return text
+    .replace(/["'“”‘’.,!?;:()\[\]{}·…\-–—]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function charBigrams(s) {
+  const clean = s.replace(/\s+/g, "");
+  const grams = [];
+  for (let i = 0; i < clean.length - 1; i++) grams.push(clean.slice(i, i + 2));
+  return grams;
+}
+
+function diceCoefficient(a, b) {
+  const ga = charBigrams(a);
+  const gb = charBigrams(b);
+  if (ga.length === 0 || gb.length === 0) return ga.length === gb.length ? 1 : 0;
+  const counts = new Map();
+  for (const g of ga) counts.set(g, (counts.get(g) || 0) + 1);
+  let overlap = 0;
+  for (const g of gb) {
+    const c = counts.get(g) || 0;
+    if (c > 0) { overlap++; counts.set(g, c - 1); }
+  }
+  return (2 * overlap) / (ga.length + gb.length);
+}
+
+function jaccardWords(a, b) {
+  const wa = new Set(a.split(" ").filter(Boolean));
+  const wb = new Set(b.split(" ").filter(Boolean));
+  if (wa.size === 0 || wb.size === 0) return wa.size === wb.size ? 1 : 0;
+  let inter = 0;
+  for (const w of wa) if (wb.has(w)) inter++;
+  const union = new Set([...wa, ...wb]).size;
+  return inter / union;
+}
+
+function scoreAnswer(userText, correctText) {
+  const u = normalize(userText);
+  const c = normalize(correctText);
+  if (!u) return 0;
+  const dice = diceCoefficient(u, c);
+  const jac = jaccardWords(u, c);
+  const raw = 0.65 * dice + 0.35 * jac;
+  return Math.max(0, Math.min(100, Math.round(raw * 100)));
+}
+
+function scoreTier(score) {
+  if (score >= 80) return "good";
+  if (score >= 55) return "mid";
+  return "low";
+}
+
+function scoreLabel(score) {
+  if (score >= 90) return "훌륭해요";
+  if (score >= 80) return "좋아요";
+  if (score >= 55) return "핵심은 맞아요";
+  if (score >= 30) return "조금 더 다듬어보세요";
+  return "다시 확인해보세요";
+}
+
+function updateProgress() {
+  const pct = Math.round((current / order.length) * 100);
+  progressFill.style.width = pct + "%";
+  topSub.textContent = `${Math.min(current + 1, order.length)} / ${order.length}`;
+}
+
+function renderStart() {
+  topSub.textContent = "";
+  progressFill.style.width = "0%";
+  globalHint.textContent = "";
+  app.innerHTML = `
+    <div class="card start">
+      <p class="kicker">SW-PBIS 독해 지문 · 총 ${DATA.length}문장</p>
+      <h2>영어 문장을 읽고<br>한글 해석을 적어보세요</h2>
+      <p class="desc">시험범위 지문의 모든 문장이 순서대로 출제됩니다. 문장을 읽고 한글 뜻을 적은 뒤 제출하면, 정답과 함께 참고용 유사도 점수를 보여줘요.</p>
+      <div class="option-row">
+        <button class="toggle active" id="optSeq"><strong>순서대로</strong>지문 순서 그대로 풀기</button>
+        <button class="toggle" id="optShuffle"><strong>무작위 순서</strong>섞어서 풀기</button>
+      </div>
+      <button class="primary" id="startBtn">시작하기</button>
+    </div>
+  `;
+  document.getElementById("optSeq").onclick = () => setMode("sequential");
+  document.getElementById("optShuffle").onclick = () => setMode("shuffle");
+  document.getElementById("startBtn").onclick = startQuiz;
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById("optSeq").classList.toggle("active", m === "sequential");
+  document.getElementById("optShuffle").classList.toggle("active", m === "shuffle");
+}
+
+function startQuiz() {
+  order = mode === "shuffle" ? shuffle(DATA.map((_, i) => i)) : DATA.map((_, i) => i);
+  current = 0;
+  results = [];
+  answered = false;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  updateProgress();
+  const item = DATA[order[current]];
+  globalHint.textContent = "Ctrl/⌘+Enter 로도 제출할 수 있어요.";
+  app.innerHTML = `
+    <div class="card">
+      <p class="qnum">문제 ${current + 1}</p>
+      <p class="sentence-en">${escapeHtml(item.en)}</p>
+      <label class="field-label" for="answerBox">이 문장의 한글 해석을 적어보세요</label>
+      <textarea id="answerBox" placeholder="여기에 한글로 해석을 입력하세요..."></textarea>
+      <button class="primary" id="submitBtn">제출</button>
+      <div id="feedbackSlot"></div>
+    </div>
+  `;
+  const box = document.getElementById("answerBox");
+  box.focus();
+  box.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      submitAnswer();
+    }
+  });
+  document.getElementById("submitBtn").onclick = submitAnswer;
+}
+
+function submitAnswer() {
+  if (answered) return;
+  answered = true;
+  const item = DATA[order[current]];
+  const userText = document.getElementById("answerBox").value;
+  const score = scoreAnswer(userText, item.ko);
+  results.push({ idx: order[current], userText: userText.trim(), score });
+
+  const tier = scoreTier(score);
+  const isLast = current === order.length - 1;
+
+  document.getElementById("submitBtn").remove();
+  document.getElementById("answerBox").setAttribute("disabled", "true");
+
+  const slot = document.getElementById("feedbackSlot");
+  slot.innerHTML = `
+    <div class="feedback">
+      <div class="score-row">
+        <div class="score-badge ${tier}">${score}점</div>
+        <div class="score-note">${scoreLabel(score)} · 핵심 어휘·의미 일치도를 어림한 참고용 점수예요</div>
+      </div>
+      <div class="answer-block">
+        <div class="label">내가 쓴 답</div>
+        <div class="text">${userText.trim() ? escapeHtml(userText.trim()) : "(입력 없음)"}</div>
+      </div>
+      <div class="answer-block correct">
+        <div class="label">정답 해석</div>
+        <div class="text">${escapeHtml(item.ko)}</div>
+      </div>
+      <div class="nav-row">
+        <button class="primary" id="nextBtn">${isLast ? "결과 보기" : "다음 문제"}</button>
+      </div>
+    </div>
+  `;
+  document.getElementById("nextBtn").onclick = () => {
+    if (isLast) {
+      renderResult();
+    } else {
+      current++;
+      renderQuestion();
+    }
+  };
+}
+
+function renderResult() {
+  progressFill.style.width = "100%";
+  topSub.textContent = `${order.length} / ${order.length}`;
+  globalHint.textContent = "";
+  const avg = Math.round(results.reduce((s, r) => s + r.score, 0) / results.length);
+  const goodCount = results.filter((r) => r.score >= 80).length;
+
+  const rows = order
+    .map((di, i) => {
+      const r = results[i];
+      const item = DATA[di];
+      const tier = scoreTier(r.score);
+      const colorVar = tier === "good" ? "var(--good)" : tier === "mid" ? "var(--mid)" : "var(--warn)";
+      return `
+        <div class="review-item">
+          <div class="row1">
+            <span class="idx">문제 ${i + 1}</span>
+            <span class="sc" style="color:${colorVar}">${r.score}점</span>
+          </div>
+          <div class="en">${escapeHtml(item.en)}</div>
+          <div class="ko-user">내 답: ${r.userText ? escapeHtml(r.userText) : "(입력 없음)"}</div>
+          <div class="ko-correct">정답: ${escapeHtml(item.ko)}</div>
+        </div>`;
+    })
+    .join("");
+
+  app.innerHTML = `
+    <div class="card result">
+      <h2>테스트 완료</h2>
+      <div class="avg">${avg}점</div>
+      <div class="avg-label">평균 점수 · ${order.length}문항 중 80점 이상 ${goodCount}개</div>
+      <div class="review-list">${rows}</div>
+      <button class="primary" id="retryBtn">다시 풀기</button>
+      <button class="ghost" id="homeBtn">처음 화면으로</button>
+    </div>
+  `;
+  document.getElementById("retryBtn").onclick = startQuiz;
+  document.getElementById("homeBtn").onclick = renderStart;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+renderStart();
+</script>
+</body>
+</html>
